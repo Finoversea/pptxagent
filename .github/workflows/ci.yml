@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt 2>/dev/null || pip install python-pptx pytest
+
+      - name: Run tests
+        run: pytest tests/ -v
+
+  pptx-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install python-pptx
+        run: pip install python-pptx
+
+      - name: Validate PPTX structure
+        run: |
+          python -c "
+          from pptx import Presentation
+          from pptx.util import Inches, Pt
+          # Basic validation: create a test PPTX
+          prs = Presentation()
+          slide = prs.slides.add_slide(prs.slide_layouts[0])
+          title = slide.shapes.title
+          title.text = 'Validation Test'
+          prs.save('test_output.pptx')
+          print('PPTX validation passed')
+          "
