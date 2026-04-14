@@ -5,27 +5,54 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main, develop]
+  release:
+    types: [published]
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt 2>/dev/null || pip install python-pptx pytest
+          pip install -e ".[dev]"
+          pip install python-pptx
 
       - name: Run tests
-        run: pytest tests/ -v
+        run: |
+          pytest tests/ -v --tb=short
 
-  pptx-validation:
+      - name: Validate PPTX output
+        run: |
+          python -c "
+          from pptx import Presentation
+          # Create a test presentation to validate python-pptx works
+          prs = Presentation()
+          slide_layout = prs.slide_layouts[0]
+          slide = prs.slides.add_slide(slide_layout)
+          title = slide.shapes.title
+          title.text = 'Test Slide'
+          prs.save('test_output.pptx')
+          # Validate the file was created and is valid
+          import os
+          assert os.path.exists('test_output.pptx'), 'PPTX not created'
+          prs2 = Presentation('test_output.pptx')
+          assert len(prs2.slides) == 1, 'Slide count mismatch'
+          print('PPTX validation passed')
+          "
+
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,21 +60,55 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
-      - name: Install python-pptx
-        run: pip install python-pptx
-
-      - name: Validate PPTX structure
+      - name: Install linting tools
         run: |
-          python -c "
-          from pptx import Presentation
-          from pptx.util import Inches, Pt
-          # Basic validation: create a test PPTX
-          prs = Presentation()
-          slide = prs.slides.add_slide(prs.slide_layouts[0])
-          title = slide.shapes.title
-          title.text = 'Validation Test'
-          prs.save('test_output.pptx')
-          print('PPTX validation passed')
-          "
+          pip install ruff black
+
+      - name: Run Ruff
+        run: ruff check src/ tests/
+
+      - name: Check formatting
+        run: black --check src/ tests/
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [test, lint]
+    if: github.event_name == 'release'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build package
+        run: |
+          pip install build
+          python -m build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-packages
+          path: dist/
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'release'
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-packages
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
