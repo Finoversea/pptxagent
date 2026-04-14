@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* PwC-inspired base styles */
+@layer base {
+  h1, h2, h3 {
+    @apply font-serif font-bold;
+  }
+
+  body {
+    @apply font-sans;
+  }
+}
+
+/* Custom components */
+@layer components {
+  .chat-input {
+    @apply w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pwc-orange focus:border-transparent;
+  }
+
+  .slide-thumbnail {
+    @apply border-2 border-transparent rounded-lg hover:border-pwc-orange transition-all cursor-pointer;
+  }
+
+  .slide-thumbnail-selected {
+    @apply border-2 border-pwc-orange rounded-lg;
+  }
+
+  .message-bubble {
+    @apply px-4 py-2 rounded-lg max-w-[80%];
+  }
+
+  .message-user {
+    @apply bg-pwc-orange text-white ml-auto;
+  }
+
+  .message-assistant {
+    @apply bg-gray-100 text-black;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #A1A8B3;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #FD5108;
+}
