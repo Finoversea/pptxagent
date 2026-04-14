@@ -12,19 +12,21 @@ from app.models.deck import SlideContent
 
 def extract_text_from_response(response) -> str:
     """Extract text content from API response, handling different block types."""
+    # First, try to find a text block (preferred)
     for block in response.content:
-        if hasattr(block, 'text'):
+        if hasattr(block, 'text') and block.text:
             return block.text
-        elif hasattr(block, 'thinking'):
-            # For models that return thinking blocks, use the thinking content
+
+    # If no text block, try thinking block as fallback
+    for block in response.content:
+        if hasattr(block, 'thinking') and block.thinking:
             return block.thinking
-    # Fallback: try to get text from first block
+
+    # Fallback: get string representation of first block
     if response.content:
         block = response.content[0]
-        if hasattr(block, 'text'):
-            return block.text
-        elif hasattr(block, 'thinking'):
-            return block.thinking
+        return str(block)
+
     return ""
 
 
@@ -93,6 +95,7 @@ Focus on impactful, business-appropriate content."""
 
         # Parse response
         content = extract_text_from_response(response)
+
         # Extract JSON from response (handle potential markdown wrapping)
         if "```json" in content:
             content = content.split("```json")[1].split("```")[0]
