@@ -25,3 +25,7 @@ npm-debug.log*
 
 # Test
 coverage/
+
+# Build artifacts
+package-lock.json
+tsconfig.tsbuildinfo

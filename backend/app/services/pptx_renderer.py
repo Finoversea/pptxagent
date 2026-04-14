@@ -5,7 +5,7 @@ from pathlib import Path
 
 from pptx import Presentation
 from pptx.util import Inches, Pt
-from pptx.dml.color import RgbColor
+from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN
 from pptx.enum.shapes import MSO_SHAPE
 
@@ -15,13 +15,13 @@ from app.models.deck import Deck, Slide, SlideContent
 
 # PwC brand colors
 PWC_COLORS = {
-    "orange": RgbColor(253, 81, 8),  # #FD5108
-    "white": RgbColor(255, 255, 255),
-    "black": RgbColor(0, 0, 0),
-    "gray_500": RgbColor(161, 168, 179),  # #A1A8B3
-    "gray_300": RgbColor(203, 209, 214),  # #CBD1D6
-    "orange_400": RgbColor(254, 124, 57),  # #FE7C39
-    "orange_300": RgbColor(255, 170, 114),  # #FFAA72
+    "orange": RGBColor(253, 81, 8),  # #FD5108
+    "white": RGBColor(255, 255, 255),
+    "black": RGBColor(0, 0, 0),
+    "gray_500": RGBColor(161, 168, 179),  # #A1A8B3
+    "gray_300": RGBColor(203, 209, 214),  # #CBD1D6
+    "orange_400": RGBColor(254, 124, 57),  # #FE7C39
+    "orange_300": RGBColor(255, 170, 114),  # #FFAA72
 }
 
 

@@ -9,7 +9,7 @@ class Settings(BaseSettings):
 
     # Claude API configuration
     anthropic_api_key: str = ""
-    claude_model: str = "claude-sonnet-4-20250514"  # Default to Sonnet 4
+    claude_model: str = "claude-3-5-sonnet-20241022"  # Use stable Sonnet 3.5
 
     # Storage configuration
     storage_path: str = "./storage"

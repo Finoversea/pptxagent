@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import type { Message } from '@/types';
 import { useChatWithDeck, useConversation } from '@/hooks/useDeck';
 import { useDeckStore } from '@/stores/deckStore';
@@ -14,7 +14,10 @@ export function ChatPanel() {
   const chatMutation = useChatWithDeck(deckId);
   const { data: conversationData } = useConversation(deckId);
 
-  const messages: Message[] = conversationData?.messages || [];
+  const messages: Message[] = useMemo(
+    () => conversationData?.messages || [],
+    [conversationData?.messages]
+  );
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {

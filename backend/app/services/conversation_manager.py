@@ -10,6 +10,24 @@ from app.models.conversation import Conversation, EditIntent, Message
 from app.models.deck import SlideContent
 
 
+def extract_text_from_response(response) -> str:
+    """Extract text content from API response, handling different block types."""
+    for block in response.content:
+        if hasattr(block, 'text'):
+            return block.text
+        elif hasattr(block, 'thinking'):
+            # For models that return thinking blocks, use the thinking content
+            return block.thinking
+    # Fallback: try to get text from first block
+    if response.content:
+        block = response.content[0]
+        if hasattr(block, 'text'):
+            return block.text
+        elif hasattr(block, 'thinking'):
+            return block.thinking
+    return ""
+
+
 class ConversationManager:
     """Manage conversations with Claude API for deck generation and editing."""
 
@@ -74,7 +92,7 @@ Focus on impactful, business-appropriate content."""
         )
 
         # Parse response
-        content = response.content[0].text
+        content = extract_text_from_response(response)
         # Extract JSON from response (handle potential markdown wrapping)
         if "```json" in content:
             content = content.split("```json")[1].split("```")[0]
@@ -117,7 +135,7 @@ Return the parsed intent as JSON."""
             messages=[{"role": "user", "content": user_message}],
         )
 
-        content = response.content[0].text
+        content = extract_text_from_response(response)
         if "```json" in content:
             content = content.split("```json")[1].split("```")[0]
         elif "```" in content:
@@ -153,7 +171,7 @@ Return the updated slide content as JSON with the same structure."""
             messages=[{"role": "user", "content": user_message}],
         )
 
-        content = response.content[0].text
+        content = extract_text_from_response(response)
         if "```json" in content:
             content = content.split("```json")[1].split("```")[0]
         elif "```" in content:
