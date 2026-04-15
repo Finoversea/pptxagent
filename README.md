@@ -135,13 +135,6 @@ pptxagent/
 └── plans/
 ```
 
-## Legacy Directories (To Be Removed)
-
-The following directories are deprecated and will be removed in Phase 3:
-- `backend-ts/` - Migrated to `src/lib/`
-- `web/` - Migrated to `src/`
-- `backend/` - Python backend (deprecated)
-
 ## Brand Style
 
 Default style follows PwC brand guidelines:
@@ -162,11 +155,11 @@ Default style follows PwC brand guidelines:
 | Phase | Status | Description |
 |-------|--------|-------------|
 | Phase 1 | ✅ Done | Scaffold + lib migration |
-| Phase 2 | Pending | API routes + frontend migration |
-| Phase 3 | Pending | Delete legacy directories |
+| Phase 2 | ✅ Done | API routes + frontend migration |
+| Phase 3 | ✅ Done | Delete legacy directories |
 | Phase 4 | Pending | Testing + documentation |
 
-Current branch: `feature/nextjs-consolidation`
+**Current branch:** `develop` (all phases merged)
 
 ## License
 
