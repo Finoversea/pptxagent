@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Standalone output for Docker deployment
+  output: 'standalone',
   // Allow images from backend preview service
   images: {
     domains: ['localhost'],
