@@ -1,35 +1,35 @@
 # PPTX Agent
 
-AI-powered PowerPoint generation with TypeScript agent framework.
+AI-powered PowerPoint generation with unified Next.js application.
 
 ## Overview
 
 PPTX Agent generates professional PPTX presentations from natural language prompts using LangGraph agents and Claude API.
 
-## Architecture
+## Architecture (Consolidated)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    NEXT.JS FRONTEND (web/)                       │
+│                    NEXT.JS APPLICATION (src/)                    │
 │  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐        │
-│  │ Chat Panel    │  │ Slide Preview │  │ Thumbnails    │        │
-│  │ (ai-sdk.dev)  │  │ (Visual)      │  │ (Selection)   │        │
+│  │ Chat UI       │  │ Slide Preview │  │ Thumbnails    │        │
+│  │ (page.tsx)    │  │ (Visual)      │  │ (Selection)   │        │
 │  └───────────────┘  └───────────────┘  └───────────────┘        │
 │                                                                  │
-│  State: React Query + Zustand                                   │
-└─────────────────────────────────────────────────────────────────┘
-                              │ REST API
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    EXPRESS BACKEND (backend-ts/)                 │
-│  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐        │
-│  │ LangGraph     │  │ Slide Engine  │  │ PPTX Renderer │        │
-│  │ Agent         │  │ (JSON State)  │  │ (pptxgenjs)   │        │
-│  └───────────────┘  └───────────────┘  └───────────────┘        │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │                    API ROUTES (src/app/api/)                 ││
+│  │  /api/health    /api/deck/generate    /api/export/[deckId]  ││
+│  └─────────────────────────────────────────────────────────────┘│
 │                                                                  │
-│  API: Express + Zod validation                                  │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │                    CORE LIBRARY (src/lib/)                   ││
+│  │  agent.ts       pptx.ts        config.ts                    ││
+│  │  rateLimiter.ts retry.ts       inputSanitization.ts         ││
+│  └─────────────────────────────────────────────────────────────┘│
+│                                                                  │
 │  LLM: Claude API (Haiku)                                        │
 │  Rate limiting: Token bucket (60 RPM)                           │
+│  PPTX: pptxgenjs                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -37,57 +37,63 @@ PPTX Agent generates professional PPTX presentations from natural language promp
 
 | Component | Technology |
 |-----------|------------|
-| Backend Agent | LangGraph (TypeScript) |
-| Frontend Chat | ai-sdk.dev (Vercel AI SDK) |
+| Framework | Next.js 14 (App Router) |
+| Agent Workflow | LangGraph (TypeScript) |
 | PPTX Generation | pptxgenjs |
 | API Validation | Zod |
+| Styling | TailwindCSS |
 | Language | TypeScript only |
 
 ## Quick Start
 
-### 1. Backend (TypeScript)
+### Single Application Startup
 
 ```bash
-cd backend-ts
+# Clone the repository
+git clone <repo-url>
+cd pptxagent
 
-# Install dependencies
+# Install dependencies (all dependencies in one package.json)
 npm install
 
 # Set environment variables
 export ANTHROPIC_API_KEY=your_key_here
 
-# Run the server
+# Run development server (frontend + backend in one process)
 npm run dev
 ```
 
-Backend API will be available at http://localhost:8001
+Application will be available at **http://localhost:3000**
 
-### 2. Frontend (Next.js)
+### Production Build
 
 ```bash
-cd web
+# Build for production
+npm run build
 
-# Install dependencies
-npm install
-
-# Run the development server
-npm run dev
+# Start production server
+npm run start
 ```
 
-Frontend will be available at http://localhost:3000
+### Other Commands
+
+```bash
+npm run lint      # Run ESLint
+npm run build     # Build Next.js application
+```
 
 ## API Endpoints
 
 | Endpoint | Method | Purpose |
 |----------|--------|--------|
-| `/health` | GET | Health check |
-| `/deck/generate` | POST | Create deck from prompt |
-| `/deck/:deckId` | GET | Get deck status |
-| `/export/:deckId/pptx` | GET | Download PPTX file |
+| `/api/health` | GET | Health check |
+| `/api/deck/generate` | POST | Create deck from prompt |
+| `/api/deck/[deckId]` | GET | Get deck status |
+| `/api/export/[deckId]/pptx` | GET | Download PPTX file |
 
 ### Request Validation
 
-The `/deck/generate` endpoint validates requests with Zod:
+The `/api/deck/generate` endpoint validates requests with Zod:
 
 ```typescript
 {
@@ -100,26 +106,41 @@ The `/deck/generate` endpoint validates requests with Zod:
 
 ```
 pptxagent/
-├── backend-ts/          # TypeScript Express backend
-│   ├── src/
-│   │   ├── index.ts     # Express server + Zod validation
-│   │   ├── agent.ts     # LangGraph agent workflow
-│   │   ├── pptx.ts      # pptxgenjs renderer
-│   │   └── config.ts    # Configuration
-│   └── tests/
-│       └── agent.test.ts # Vitest tests
-├── web/                  # Next.js frontend
-│   ├── src/
-│   │   ├── app/          # Next.js app router
-│   │   ├── components/   # React components
-│   │   ├── hooks/        # Custom hooks
-│   │   ├── stores/       # Zustand stores
-│   │   └── types/        # TypeScript types
-│   └── package.json
-├── backend/              # Python backend (deprecated, will be removed)
+├── src/
+│   ├── app/
+│   │   ├── page.tsx           # Main UI
+│   │   ├── layout.tsx         # Root layout
+│   │   ├── globals.css        # Global styles
+│   │   └── api/               # API Routes (backend logic)
+│   │       ├── health/route.ts
+│   │       └── deck/
+│   │           ├── generate/route.ts
+│   │           └── [deckId]/route.ts
+│   ├── lib/                   # Core library (migrated from backend-ts)
+│   │   ├── agent.ts           # LangGraph agent workflow
+│   │   ├── pptx.ts            # pptxgenjs renderer
+│   │   ├── config.ts          # Configuration
+│   │   ├── rateLimiter.ts     # Token bucket rate limiting
+│   │   ├── retry.ts           # Exponential backoff retry
+│   │   └── inputSanitization.ts # LLM trust boundary protection
+│   ├── components/            # React components
+│   ├── hooks/                 # Custom hooks
+│   ├── stores/                # Zustand stores
+│   └── types/                 # TypeScript types
+├── package.json               # Unified dependencies
+├── next.config.js             # Next.js configuration
+├── tailwind.config.js         # Tailwind configuration
+├── tsconfig.json              # TypeScript configuration
 ├── docs/
 └── plans/
 ```
+
+## Legacy Directories (To Be Removed)
+
+The following directories are deprecated and will be removed in Phase 3:
+- `backend-ts/` - Migrated to `src/lib/`
+- `web/` - Migrated to `src/`
+- `backend/` - Python backend (deprecated)
 
 ## Brand Style
 
@@ -135,6 +156,17 @@ Default style follows PwC brand guidelines:
 - Input sanitization with unicode homoglyph normalization
 - Semantic injection pattern detection
 - Content isolation with XML tags
+
+## Migration Status
+
+| Phase | Status | Description |
+|-------|--------|-------------|
+| Phase 1 | ✅ Done | Scaffold + lib migration |
+| Phase 2 | Pending | API routes + frontend migration |
+| Phase 3 | Pending | Delete legacy directories |
+| Phase 4 | Pending | Testing + documentation |
+
+Current branch: `feature/nextjs-consolidation`
 
 ## License
 
