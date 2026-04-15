@@ -59,3 +59,11 @@ logs/
 node_modules/
 .npm/
 *.tsbuildinfo
+
+# Next.js build output
+.next/
+dist/
+out/
+
+# Legacy code (migration backup)
+legacy_python/
