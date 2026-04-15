@@ -167,6 +167,31 @@ function sleep(ms: number): Promise<void> {
 const retryConfig = getRetryConfig(config);
 const rateLimiter = new RateLimiter(retryConfig.rateLimitRpm);
 
+/**
+ * Safely extract text from Anthropic message content
+ * Handles empty arrays, null content, and non-text content blocks
+ *
+ * @param message - Anthropic message response
+ * @returns Extracted text or empty string
+ */
+function extractTextFromMessage(message: Anthropic.Message): string {
+  // Check if content array exists and has elements
+  if (!message.content || message.content.length === 0) {
+    return "";
+  }
+
+  // Get first content block
+  const firstBlock = message.content[0];
+
+  // Check if it's a text block and has text property
+  if (firstBlock?.type === "text" && typeof firstBlock.text === "string") {
+    return firstBlock.text;
+  }
+
+  // Fallback for non-text content
+  return "";
+}
+
 // === Zod Schemas ===
 
 const SlideSchema = z.object({
@@ -255,7 +280,7 @@ async function websearch(query: string): Promise<SearchResult[]> {
       isRetryableError
     );
 
-    const content = message.content[0].type === "text" ? message.content[0].text : "";
+    const content = extractTextFromMessage(message);
 
     // Parse results
     return [{
@@ -325,7 +350,7 @@ ${CONTENT_ISOLATION_INSTRUCTION}`;
       isRetryableError
     );
 
-    return message.content[0].type === "text" ? message.content[0].text.trim() : `Content for ${slideType} slide`;
+    return extractTextFromMessage(message).trim() || `Content for ${slideType} slide`;
   } catch (error) {
     console.warn(`generateResearchBackedContent failed for ${slideType}: ${getErrorSummary(error)}`);
     return `Content for ${slideType} slide`;
@@ -504,7 +529,7 @@ ${CONTENT_ISOLATION_INSTRUCTION}`;
       isRetryableError
     );
 
-    return message.content[0].type === "text" ? message.content[0].text.trim() : `Content for ${slideType} slide`;
+    return extractTextFromMessage(message).trim() || `Content for ${slideType} slide`;
   } catch (error) {
     console.warn(`generateSlideContent failed for ${slideType}: ${getErrorSummary(error)}`);
     return `Content for ${slideType} slide`;
