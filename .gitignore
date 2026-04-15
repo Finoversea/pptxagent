@@ -56,3 +56,8 @@ ENV/
 !templates/*.pptx
 output/
 logs/
+
+# Node.js
+node_modules/
+.npm/
+*.tsbuildinfo
