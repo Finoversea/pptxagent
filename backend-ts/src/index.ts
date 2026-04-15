@@ -4,8 +4,45 @@
 
 import express from "express";
 import cors from "cors";
+import { z } from "zod";
 import { runDeckGeneration } from "./agent.js";
 import { generatePptx } from "./pptx.js";
+
+// === Zod Validation Schemas ===
+
+/**
+ * Allowed style presets - must match STYLES in pptx.ts
+ */
+const StyleSchema = z.enum(["default", "pwc"], {
+  errorMap: () => ({ message: "Invalid style. Allowed values: 'default', 'pwc'" }),
+});
+
+/**
+ * Deck generation request validation
+ * - prompt: required, min 10 chars for meaningful content, max 2000 chars to prevent overflow
+ * - style: optional, must be one of the allowed presets
+ */
+const DeckGenerateRequestSchema = z.object({
+  prompt: z.string({
+    required_error: "Prompt is required",
+    invalid_type_error: "Prompt must be a string",
+  })
+    .min(10, "Prompt must be at least 10 characters")
+    .max(2000, "Prompt must not exceed 2000 characters"),
+  style: StyleSchema.optional().default("default"),
+});
+
+/**
+ * Validate request and return parsed data or throw with formatted error
+ */
+function validateRequest<T>(schema: z.ZodSchema<T>, data: unknown): T {
+  const result = schema.safeParse(data);
+  if (!result.success) {
+    const errors = result.error.errors.map(e => `${e.path.join(".")}: ${e.message}`);
+    throw new Error(`Validation failed: ${errors.join(", ")}`);
+  }
+  return result.data;
+}
 
 const app = express();
 const PORT = process.env.PORT || 8001;
@@ -26,13 +63,10 @@ app.get("/health", (req, res) => {
 // Generate deck endpoint
 app.post("/deck/generate", async (req, res) => {
   try {
-    const { prompt, style } = req.body;
+    // Validate request with Zod schema
+    const validated = validateRequest(DeckGenerateRequestSchema, req.body);
 
-    if (!prompt) {
-      return res.status(400).json({ error: "Missing prompt" });
-    }
-
-    const result = await runDeckGeneration(prompt, style || "default");
+    const result = await runDeckGeneration(validated.prompt, validated.style);
 
     res.json({
       deck_id: result.deckId,
@@ -41,6 +75,10 @@ app.post("/deck/generate", async (req, res) => {
       errors: result.errors,
     });
   } catch (error) {
+    // Handle validation errors separately for 400 response
+    if (error instanceof Error && error.message.startsWith("Validation failed")) {
+      return res.status(400).json({ error: error.message });
+    }
     console.error("Generation error:", error);
     res.status(500).json({ error: "Generation failed" });
   }
