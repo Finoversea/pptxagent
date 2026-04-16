@@ -59,7 +59,7 @@ export function ChatBox() {
                   Describe what you need and I will generate slides for you.
                 </p>
                 <p className="text-sm text-gray-500">
-                  Example: "Create a 5-slide pitch deck for a fintech startup"
+                  Example: &quot;Create a 5-slide pitch deck for a fintech startup&quot;
                 </p>
               </div>
             </div>
