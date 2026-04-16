@@ -31,9 +31,20 @@ export function ChatBox() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputValue.trim()) return;
+    const text = inputValue.trim();
+    if (!text) return;
 
-    await sendMessage({ text: inputValue.trim() });
+    console.log('Sending message:', text);
+    try {
+      // Send as text message - ai-sdk will format it correctly
+      await sendMessage({
+        role: 'user',
+        text: text,
+      });
+      console.log('Message sent successfully');
+    } catch (err) {
+      console.error('Send message error:', err);
+    }
     setInputValue('');
   };
 
@@ -132,17 +143,8 @@ export function ChatBox() {
               disabled={!inputValue.trim() || isLoading}
               className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
             >
-              Send
+              {isLoading ? 'Sending...' : 'Send'}
             </button>
-            {isLoading && (
-              <button
-                type="button"
-                onClick={stop}
-                className="px-4 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-              >
-                Stop
-              </button>
-            )}
           </div>
         </form>
       </div>
